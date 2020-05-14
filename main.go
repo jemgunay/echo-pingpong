@@ -4,15 +4,19 @@ import (
 	"flag"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
 
 	alexa "github.com/mikeflynn/go-alexa/skillserver"
 )
 
 func main() {
-	// parse flags
-	port := flag.Uint64("port", 3000, "the port for the HTTP server to listen on")
-	skillID := flag.String("skill_id", "", "the port for the HTTP server to listen on")
+	// parse args
+	port, err := strconv.Atoi(os.Getenv("PORT"))
+	if err != nil || port == 0 {
+		port = 8080
+	}
+	skillID := flag.String("skill_id", "***REMOVED***", "the ping pong alexa skill ID")
 
 	flag.Parse()
 
@@ -20,8 +24,8 @@ func main() {
 		log.Fatal("skill id flag not set")
 	}
 
-	log.Printf("starting HTTP server on port %d", *port)
-	start(int(*port), *skillID)
+	log.Printf("starting HTTP server on port %d", port)
+	start(port, *skillID)
 }
 
 func start(port int, skillID string) {
