@@ -1,6 +1,8 @@
-package pingpong
+package main
 
 import (
+	"flag"
+	"log"
 	"net/http"
 	"strconv"
 
@@ -9,7 +11,22 @@ import (
 	alexa "github.com/mikeflynn/go-alexa/skillserver"
 )
 
-func Start(port int, skillID string) {
+func main() {
+	// parse flags
+	port := flag.Uint64("port", 3000, "the port for the HTTP server to listen on")
+	skillID := flag.String("skill_id", "", "the port for the HTTP server to listen on")
+
+	flag.Parse()
+
+	if *skillID == "" {
+		log.Fatal("skill id flag not set")
+	}
+
+	log.Printf("starting HTTP server on port %d", *port)
+	start(int(*port), *skillID)
+}
+
+func start(port int, skillID string) {
 	// define handler routing
 	echoApps := map[string]interface{}{
 		"/echo/pingpong": alexa.EchoApplication{
@@ -31,6 +48,16 @@ func echoIntentHandler(w http.ResponseWriter, r *http.Request) {
 	if echoReq.GetRequestType() == "LaunchRequest" {
 
 	} else if echoReq.GetRequestType() == "IntentRequest" {
+		switch echoReq.GetIntentName() {
+		case "StartGame":
+
+		case "ScorePoint":
+
+		case "QuitGame":
+
+		default:
+
+		}
 
 	} else if echoReq.GetRequestType() == "SessionEndedRequest" {
 
