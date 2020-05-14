@@ -6,8 +6,6 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/jemgunay/echo-pingpong/game"
-
 	alexa "github.com/mikeflynn/go-alexa/skillserver"
 )
 
@@ -43,7 +41,7 @@ func start(port int, skillID string) {
 func echoIntentHandler(w http.ResponseWriter, r *http.Request) {
 	echoReq := alexa.GetEchoRequest(r)
 
-	g := game.Get(echoReq.GetSessionID())
+	//g := game.Get(echoReq.GetSessionID())
 
 	if echoReq.GetRequestType() == "LaunchRequest" {
 
