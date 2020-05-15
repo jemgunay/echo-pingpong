@@ -42,6 +42,7 @@ func echoIntentHandler(w http.ResponseWriter, r *http.Request) {
 	echoReq := alexa.GetEchoRequest(r)
 
 	//g := game.Get(echoReq.GetSessionID())
+	log.Printf("session key: %s", echoReq.GetSessionID())
 
 	if echoReq.GetRequestType() == "LaunchRequest" {
 
@@ -60,10 +61,12 @@ func echoIntentHandler(w http.ResponseWriter, r *http.Request) {
 	} else if echoReq.GetRequestType() == "SessionEndedRequest" {
 
 	}
+
+	startGame(w, "wanna play some ping pong fam")
 }
 
-func startGame(w http.ResponseWriter) {
-	echoResp := alexa.NewEchoResponse().OutputSpeech("I'm sorry, but I can't seem to get a question right now.").EndSession(true)
+func startGame(w http.ResponseWriter, message string) {
+	echoResp := alexa.NewEchoResponse().OutputSpeech(message).EndSession(true)
 	json, err := echoResp.String()
 	if err != nil {
 		// TODO: handle error properly
