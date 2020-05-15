@@ -20,10 +20,6 @@ func main() {
 
 	flag.Parse()
 
-	if *skillID == "" {
-		log.Fatal("skill id flag not set")
-	}
-
 	log.Printf("starting HTTP server on port %d", port)
 	start(port, *skillID)
 }
