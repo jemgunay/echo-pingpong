@@ -65,3 +65,14 @@ func echoIntentHandler(w http.ResponseWriter, r *http.Request) {
 
 	}
 }
+
+func startGame(w http.ResponseWriter) {
+	echoResp := alexa.NewEchoResponse().OutputSpeech("I'm sorry, but I can't seem to get a question right now.").EndSession(true)
+	json, err := echoResp.String()
+	if err != nil {
+		// TODO: handle error properly
+		return
+	}
+	w.Header().Set("Content-Type", "application/json;charset=UTF-8")
+	w.Write(json)
+}
