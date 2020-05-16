@@ -1,3 +1,3 @@
-.PHONY deploy:
-	go build
+.PHONY: deploy
+deploy:
 	gcloud app deploy
