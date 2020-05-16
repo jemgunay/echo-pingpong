@@ -1,0 +1,107 @@
+{
+  "interactionModel": {
+    "languageModel": {
+      "invocationName": "ping pong",
+      "modelConfiguration": {
+        "fallbackIntentSensitivity": {
+          "level": "LOW"
+        }
+      },
+      "intents": [
+        {
+          "name": "AMAZON.FallbackIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.CancelIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.HelpIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.StopIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.NavigateHomeIntent",
+          "samples": []
+        },
+        {
+          "name": "AddPlayer",
+          "slots": [
+            {
+              "name": "Nickname",
+              "type": "Nicknames"
+            }
+          ],
+          "samples": [
+            "Add {Nickname} to the game",
+            "New player called {Nickname}",
+            "{Nickname} joined the game",
+            "{Nickname} joined",
+            "Player {Nickname} joined",
+            "Add player {Nickname} "
+          ]
+        },
+        {
+          "name": "StartGame",
+          "slots": [],
+          "samples": [
+            "All players added",
+            "Finished adding players",
+            "Let's start",
+            "Ready to play",
+            "We're ready",
+            "I'm ready",
+            "Start the game",
+            "Let's play",
+            "Start a game of ping pong"
+          ]
+        },
+        {
+          "name": "PlayerScored",
+          "slots": [
+            {
+              "name": "Nickname",
+              "type": "Nicknames"
+            }
+          ],
+          "samples": [
+            "Point to {Nickname}",
+            "One point to {Nickname}",
+            "{Nickname} scored"
+          ]
+        }
+      ],
+      "types": [
+        {
+          "name": "Nicknames",
+          "values": [
+            {
+              "name": {
+                "value": "Josh"
+              }
+            },
+            {
+              "name": {
+                "value": "Rubs"
+              }
+            },
+            {
+              "name": {
+                "value": "Loz"
+              }
+            },
+            {
+              "name": {
+                "value": "Jem"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

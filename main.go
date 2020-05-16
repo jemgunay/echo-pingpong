@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"flag"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -46,10 +47,15 @@ func echoIntentHandler(w http.ResponseWriter, r *http.Request) {
 	echoReq := alexa.GetEchoRequest(r)
 
 	sessionKey := echoReq.GetSessionID()
-	g := game.Get(sessionKey)
+	g, isNewGame := game.Get(sessionKey)
 	log.Printf("session key: %s", sessionKey)
 
 	if echoReq.GetRequestType() == "LaunchRequest" {
+		if !isNewGame {
+			respond(w, "you have already launched the ping pong game")
+			return
+		}
+		respond(w, "add some players then start the game")
 
 	} else if echoReq.GetRequestType() == "IntentRequest" {
 		switch echoReq.GetIntentName() {
@@ -68,6 +74,23 @@ func echoIntentHandler(w http.ResponseWriter, r *http.Request) {
 			respond(w, name+" added")
 
 		case "StartGame":
+			if !isNewGame {
+				respond(w, "you have already launched the ping pong game")
+				return
+			}
+
+			if err := g.Start(); err != nil {
+				respond(w, err.Error())
+				return
+			}
+
+			nextName, err := g.NextServe()
+			if err != nil {
+				respond(w, err.Error())
+				return
+			}
+
+			respond(w, nextName+" to serve")
 
 		case "PlayerScored":
 			name, err := validateName(echoReq)
@@ -93,6 +116,7 @@ func echoIntentHandler(w http.ResponseWriter, r *http.Request) {
 			endSession(w, sessionKey)
 
 		default:
+			fmt.Printf("got unexpected intent: %s", echoReq.GetIntentName())
 			respond(w, "please can you repeat that again?")
 		}
 
@@ -116,7 +140,7 @@ func validateName(echoReq *alexa.EchoRequest) (string, error) {
 }
 
 func respond(w http.ResponseWriter, message string) {
-	echoResp := alexa.NewEchoResponse().OutputSpeech(message)
+	echoResp := alexa.NewEchoResponse().OutputSpeech(message).EndSession(false)
 	json, err := echoResp.String()
 	if err != nil {
 		return

@@ -86,12 +86,12 @@ var (
 	mu        sync.RWMutex
 )
 
-func Get(sessionKey string) *Game {
+func Get(sessionKey string) (*Game, bool) {
 	mu.RLock()
 	s, ok := gameStore[sessionKey]
 	mu.RUnlock()
 	if ok {
-		return s
+		return s, false
 	}
 
 	s = &Game{
@@ -105,7 +105,7 @@ func Get(sessionKey string) *Game {
 	mu.Lock()
 	gameStore[sessionKey] = s
 	mu.Unlock()
-	return s
+	return s, true
 }
 
 func Remove(sessionKey string) {
