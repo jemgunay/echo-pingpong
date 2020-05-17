@@ -1,7 +1,12 @@
 package game
 
 import (
+	"errors"
+	"strconv"
+	"strings"
 	"sync"
+
+	alexa "github.com/mikeflynn/go-alexa/skillserver"
 )
 
 type (
@@ -13,7 +18,7 @@ type (
 	}
 
 	Game struct {
-		Handle        RouterHandler
+		Handle        routerHandler
 		playersByName map[string]*player
 		playersByID   []*player
 		currentSet    *Set
@@ -40,25 +45,48 @@ var (
 
 func Get(sessionKey string) (*Game, bool) {
 	mu.RLock()
-	s, ok := gameStore[sessionKey]
+	g, ok := gameStore[sessionKey]
 	mu.RUnlock()
 	if ok {
-		return s, false
+		return g, false
 	}
 
-	s = &Game{
-		Handle:        s.SetupHandler,
+	g = &Game{
 		playersByName: make(map[string]*player, 2),
 		playersByID:   make([]*player, 0, 2),
 	}
+	g.Handle = g.setupHandler
+
 	mu.Lock()
-	gameStore[sessionKey] = s
+	gameStore[sessionKey] = g
 	mu.Unlock()
-	return s, true
+	return g, true
 }
 
 func Remove(sessionKey string) {
 	mu.Lock()
 	delete(gameStore, sessionKey)
 	mu.Unlock()
+}
+
+// extractName extracts the name user-specified name from the request and validates its length.
+func extractName(echoReq *alexa.EchoRequest) (string, error) {
+	slot, err := echoReq.GetSlot("Nickname")
+	if err != nil {
+		return "", errors.New("please provide a player name")
+	}
+
+	parts := strings.Split(slot.Value, " ")
+	if len(slot.Value) > 12 || len(parts) > 2 {
+		return "", errors.New("player name is too long")
+	}
+
+	return slot.Value, nil
+}
+
+func stringifyScore(score int) string {
+	if score == 0 {
+		return "love"
+	}
+	return strconv.Itoa(score)
 }

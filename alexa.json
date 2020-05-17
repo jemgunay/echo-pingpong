@@ -1,7 +1,7 @@
 {
   "interactionModel": {
     "languageModel": {
-      "invocationName": "ping pong",
+      "invocationName": "ping pong counter",
       "modelConfiguration": {
         "fallbackIntentSensitivity": {
           "level": "LOW"
@@ -37,27 +37,56 @@
             }
           ],
           "samples": [
+            "Add {Nickname}",
             "Add {Nickname} to the game",
+            "Add player {Nickname} ",
+            "New player {Nickname}",
             "New player called {Nickname}",
-            "{Nickname} joined the game",
-            "{Nickname} joined",
             "Player {Nickname} joined",
-            "Add player {Nickname} "
+            "{Nickname} joined the game",
+            "{Nickname} joined"
+          ]
+        },
+        {
+          "name": "RemovePlayer",
+          "slots": [
+            {
+              "name": "Nickname",
+              "type": "Nicknames"
+            }
+          ],
+          "samples": [
+            "Remove {Nickname}",
+            "Remove player {Nickname} ",
+            "Remove {Nickname} from the game",
+            "Delete {Nickname}",
+            "Delete player {Nickname}",
+            "Delete {Nickname} from the game",
+            "Player {Nickname} left",
+            "Player {Nickname} has left",
+            "Player {Nickname} left the game",
+            "{Nickname} left the game",
+            "{Nickname} left"
           ]
         },
         {
           "name": "StartGame",
           "slots": [],
           "samples": [
-            "All players added",
-            "Finished adding players",
+            "Good to go",
+            "Ready to go",
+            "Let's go",
             "Let's start",
-            "Ready to play",
-            "We're ready",
-            "I'm ready",
             "Start the game",
             "Let's play",
-            "Start a game of ping pong"
+            "Ready to play",
+            "Ready to start",
+            "I'm ready",
+            "We're ready",
+            "All players added",
+            "Finished adding players",
+            "Start the game of ping pong",
+            "Start the game"
           ]
         },
         {
@@ -69,6 +98,8 @@
             }
           ],
           "samples": [
+            "A point to {Nickname}",
+            "Point {Nickname}",
             "Point to {Nickname}",
             "One point to {Nickname}",
             "{Nickname} scored"
