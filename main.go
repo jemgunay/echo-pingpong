@@ -1,14 +1,11 @@
 package main
 
 import (
-	"errors"
 	"flag"
-	"fmt"
 	"log"
 	"net/http"
 	"os"
 	"strconv"
-	"strings"
 
 	"github.com/jemgunay/echo-pingpong/game"
 
@@ -24,6 +21,10 @@ func main() {
 	skillID := flag.String("skill_id", "***REMOVED***", "the ping pong alexa skill ID")
 
 	flag.Parse()
+
+	if *skillID == "" {
+		log.Fatal("skill_id not set")
+	}
 
 	log.Printf("starting HTTP server on port %d", port)
 	start(port, *skillID)
@@ -50,113 +51,51 @@ func echoIntentHandler(w http.ResponseWriter, r *http.Request) {
 	g, isNewGame := game.Get(sessionKey)
 	log.Printf("session key: %s", sessionKey)
 
-	if echoReq.GetRequestType() == "LaunchRequest" {
+	switch echoReq.GetRequestType() {
+	case "LaunchRequest":
 		if !isNewGame {
-			respond(w, "you have already launched the ping pong game")
+			respond(w, "you have already launched a ping pong game")
 			return
 		}
 		respond(w, "add some players then start the game")
 
-	} else if echoReq.GetRequestType() == "IntentRequest" {
-		switch echoReq.GetIntentName() {
-		case "AddPlayer":
-			name, err := validateName(echoReq)
-			if err != nil {
-				respond(w, err.Error())
-				return
-			}
-
-			if err := g.AddPlayer(name); err != nil {
-				respond(w, err.Error())
-				return
-			}
-
-			respond(w, name+" added")
-
-		case "StartGame":
-			if !isNewGame {
-				respond(w, "you have already launched the ping pong game")
-				return
-			}
-
-			if err := g.Start(); err != nil {
-				respond(w, err.Error())
-				return
-			}
-
-			nextName, err := g.NextServe()
-			if err != nil {
-				respond(w, err.Error())
-				return
-			}
-
-			respond(w, nextName+" to serve")
-
-		case "PlayerScored":
-			name, err := validateName(echoReq)
-			if err != nil {
-				respond(w, err.Error())
-				return
-			}
-
-			if err := g.IncrementScore(name); err != nil {
-				respond(w, err.Error())
-				return
-			}
-
-			nextName, err := g.NextServe()
-			if err != nil {
-				respond(w, err.Error())
-				return
-			}
-
-			respond(w, nextName+" to serve")
-
-		case "QuitGame":
+	case "IntentRequest":
+		if echoReq.GetIntentName() == "QuitGame" {
 			endSession(w, sessionKey)
-
-		default:
-			fmt.Printf("got unexpected intent: %s", echoReq.GetIntentName())
-			respond(w, "please can you repeat that again?")
+			return
 		}
 
-	} else if echoReq.GetRequestType() == "SessionEndedRequest" {
+		resp := g.Handle(echoReq)
+		if resp.Err != nil {
+			log.Printf("error in handler: %s", resp.Err)
+		}
+		respond(w, resp.Msg)
+
+	case "SessionEndedRequest":
 		endSession(w, sessionKey)
-	}
-}
 
-func validateName(echoReq *alexa.EchoRequest) (string, error) {
-	slot, err := echoReq.GetSlot("Nickname")
-	if err != nil {
-		return "", errors.New("please provide a player name")
+	default:
+		log.Printf("unrecognised request type: %s", echoReq.GetRequestType())
 	}
-
-	parts := strings.Split(slot.Value, " ")
-	if len(parts) > 3 {
-		return "", errors.New("player name is too long")
-	}
-
-	return slot.Value, nil
 }
 
 func respond(w http.ResponseWriter, message string) {
 	echoResp := alexa.NewEchoResponse().OutputSpeech(message).EndSession(false)
-	json, err := echoResp.String()
-	if err != nil {
-		return
-	}
-	w.Header().Set("Content-Type", "application/json;charset=UTF-8")
-	w.Write(json)
+	write(w, echoResp)
 }
 
 func endSession(w http.ResponseWriter, sessionKey string) {
 	echoResp := alexa.NewEchoResponse().EndSession(true)
+	write(w, echoResp)
+	game.Remove(sessionKey)
+}
+
+func write(w http.ResponseWriter, echoResp *alexa.EchoResponse) {
 	json, err := echoResp.String()
 	if err != nil {
+		log.Printf("error marshaling JSON response: %s", err)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json;charset=UTF-8")
 	w.Write(json)
-
-	game.Remove(sessionKey)
 }
