@@ -10,21 +10,23 @@ import (
 )
 
 type (
+	// Response represents a response message that cna be consumed by Alexa.
 	Response struct {
 		Msg string
 		Err error
 	}
 
-	RouterHandler func(r *alexa.EchoRequest) Response
+	routerHandler func(r *alexa.EchoRequest) Response
 )
 
 func NewResponse(msg string) Response {
 	return Response{Msg: msg}
 }
 
-func (g *Game) SetupHandler(echoReq *alexa.EchoRequest) Response {
+func (g *Game) setupHandler(echoReq *alexa.EchoRequest) Response {
 	switch echoReq.GetIntentName() {
 	case "AddPlayer":
+		// TODO: handle adding two players at once?
 		name, err := extractName(echoReq)
 		if err != nil {
 			return NewResponse(err.Error())
@@ -59,7 +61,7 @@ func (g *Game) SetupHandler(echoReq *alexa.EchoRequest) Response {
 			servingPlayer:  randPlayer,
 		}
 
-		g.Handle = g.InGameHandler
+		g.Handle = g.inGameHandler
 
 		return NewResponse(randPlayer.name + " to serve first")
 	}
@@ -70,22 +72,7 @@ func (g *Game) SetupHandler(echoReq *alexa.EchoRequest) Response {
 	}
 }
 
-// extractName extracts the name user-specified name from the request and validates its length.
-func extractName(echoReq *alexa.EchoRequest) (string, error) {
-	slot, err := echoReq.GetSlot("Nickname")
-	if err != nil {
-		return "", errors.New("please provide a player name")
-	}
-
-	parts := strings.Split(slot.Value, " ")
-	if len(slot.Value) > 12 || len(parts) > 2 {
-		return "", errors.New("player name is too long")
-	}
-
-	return slot.Value, nil
-}
-
-func (g *Game) InGameHandler(echoReq *alexa.EchoRequest) Response {
+func (g *Game) inGameHandler(echoReq *alexa.EchoRequest) Response {
 	switch echoReq.GetIntentName() {
 	case "PlayerScored":
 		name, err := extractName(echoReq)
@@ -105,8 +92,8 @@ func (g *Game) InGameHandler(echoReq *alexa.EchoRequest) Response {
 		// has a player won?
 		if scoringPlayer.score >= 11 && scoringPlayer.score-otherPlayer.score >= 2 {
 			// TODO: count sets
-			g.Handle = g.SetFinishedHandler
-			return NewResponse("player " + scoringPlayer.name + " wins!")
+			g.Handle = g.finishedSetHandler
+			return NewResponse(scoringPlayer.name + " won the set! Do you want to play another set?")
 		}
 
 		// swap serving player if total serves is even, or if both players have a score of 10 or above
@@ -125,10 +112,10 @@ func (g *Game) InGameHandler(echoReq *alexa.EchoRequest) Response {
 			buf.WriteString(strconv.Itoa(scoringPlayer.score) + " all")
 		} else if scoringPlayer.score > otherPlayer.score {
 			// scoring player is winning
-			buf.WriteString(strconv.Itoa(scoringPlayer.score) + ", " + strconv.Itoa(otherPlayer.score) + " to " + scoringPlayer.name)
+			buf.WriteString(stringifyScore(scoringPlayer.score) + " " + stringifyScore(otherPlayer.score) + " to " + scoringPlayer.name)
 		} else if scoringPlayer.score < otherPlayer.score {
 			// non-scoring player is winning
-			buf.WriteString(strconv.Itoa(otherPlayer.score) + ", " + strconv.Itoa(scoringPlayer.score) + " to " + otherPlayer.name)
+			buf.WriteString(stringifyScore(otherPlayer.score) + " " + stringifyScore(scoringPlayer.score) + " to " + otherPlayer.name)
 		}
 
 		buf.WriteString(". " + g.currentSet.servingPlayer.name + " to serve")
@@ -144,10 +131,14 @@ func (g *Game) InGameHandler(echoReq *alexa.EchoRequest) Response {
 	}
 }
 
-func (g *Game) SetFinishedHandler(echoReq *alexa.EchoRequest) Response {
+func (g *Game) finishedSetHandler(echoReq *alexa.EchoRequest) Response {
 	switch echoReq.GetIntentName() {
 	case "PlayAgain":
 		// TODO
+		return NewResponse("Not implemented")
+
+	case "GetScore":
+		// TODO: return sets score
 		return NewResponse("Not implemented")
 	}
 
