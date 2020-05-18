@@ -62,17 +62,21 @@
             "Delete {Nickname}",
             "Delete player {Nickname}",
             "Delete {Nickname} from the game",
-            "Player {Nickname} left",
             "Player {Nickname} has left",
             "Player {Nickname} left the game",
-            "{Nickname} left the game",
-            "{Nickname} left"
+            "{Nickname} left the game"
           ]
         },
         {
           "name": "StartGame",
           "slots": [],
           "samples": [
+            "Ready up",
+            "Next game",
+            "Play again",
+            "Start the set",
+            "New set",
+            "Start set",
             "Good to go",
             "Ready to go",
             "Let's go",
@@ -98,6 +102,9 @@
             }
           ],
           "samples": [
+            "{Nickname} point",
+            "{Nickname} scored a point",
+            "{Nickname} 's point",
             "A point to {Nickname}",
             "Point {Nickname}",
             "Point to {Nickname}",

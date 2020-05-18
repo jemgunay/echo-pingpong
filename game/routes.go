@@ -65,23 +65,27 @@ func (g *Game) setupHandler(echoReq *alexa.EchoRequest) Response {
 		// remove player references from slice and map stores
 		if p.id == 0 {
 			g.playersByID[0] = g.playersByID[1]
+			g.playersByID[0].id = 0
 		}
-		g.playersByID = g.playersByID[0:]
+		g.playersByID = g.playersByID[:1]
 
 		delete(g.playersByName, name)
 		return NewResponse(name + " has been removed")
 
 	case "StartGame":
 		if len(g.playersByName) < 2 {
-			NewResponse("at least 2 players must be added")
+			return NewResponse("at least 2 players must be added")
 		}
 
 		// determine random player to serve first
+		// TODO: properly seed rand
 		randPlayer := g.playersByID[rand.Intn(len(g.playersByID))]
 		g.currentSet = &set{
 			startingPlayer: randPlayer,
 			servingPlayer:  randPlayer,
 		}
+
+		log.Printf("player 1: %s, player 2: %s", g.playersByID[0].name, g.playersByID[1].name)
 
 		g.handler = g.inGameHandler
 
@@ -116,11 +120,39 @@ func (g *Game) inGameHandler(echoReq *alexa.EchoRequest) Response {
 			// increment winner's set wins counter
 			scoringPlayer.setsWon++
 
+			// determine who's winning in terms of sets
+			buf := strings.Builder{}
+			buf.WriteString(scoringPlayer.name + " won the set!")
+			if scoringPlayer.setsWon == otherPlayer.setsWon {
+				// drawing
+				buf.WriteString(" " + scoringPlayer.name + " and " + otherPlayer.name + " are drawing with " + strconv.Itoa(scoringPlayer.score) + " set")
+				if scoringPlayer.score > 1 {
+					// singular/plural
+					buf.WriteString("s")
+				}
+				buf.WriteString(" each")
+			} else {
+				// a player is winning
+				winning, losing := scoringPlayer, otherPlayer
+				if losing.score > winning.score {
+					winning, losing = otherPlayer, scoringPlayer
+				}
+				buf.WriteString(" " + winning.name + " is leading with " + strconv.Itoa(winning.setsWon) + " set")
+				if winning.setsWon > 1 {
+					// singular/plural
+					buf.WriteString("s")
+				}
+				buf.WriteString(" to " + strconv.Itoa(losing.setsWon))
+			}
+			buf.WriteString(". Do you want to play another set or quit?")
+
 			g.handler = g.finishedSetHandler
-			return NewResponse(scoringPlayer.name + " won the set! Do you want to play another set?")
+
+			return NewResponse(buf.String())
 		}
 
 		// swap serving player if total serves is even, or if both players have a score of 10 or above
+		// TODO: match point dialog?
 		totalScore := scoringPlayer.score + otherPlayer.score
 		if (scoringPlayer.score >= 10 && otherPlayer.score >= 10) || totalScore%2 == 0 {
 			log.Printf("swapping serving player from %s to %s", g.currentSet.servingPlayer.name, otherPlayer.name)
@@ -160,9 +192,21 @@ func (g *Game) inGameHandler(echoReq *alexa.EchoRequest) Response {
 
 func (g *Game) finishedSetHandler(echoReq *alexa.EchoRequest) Response {
 	switch echoReq.GetIntentName() {
-	case "PlayAgain":
-		// TODO
-		return NewResponse("Not implemented")
+	case "StartGame":
+		g.playersByID[0].score = 0
+		g.playersByID[1].score = 0
+
+		// determine random player to serve first
+		randPlayer := g.playersByID[rand.Intn(len(g.playersByID))]
+		g.currentSet = &set{
+			startingPlayer: randPlayer,
+			servingPlayer:  randPlayer,
+		}
+
+		g.handler = g.inGameHandler
+
+		newSet := g.playersByID[0].setsWon + g.playersByID[1].setsWon + 1
+		return NewResponse("starting set " + strconv.Itoa(newSet) + ". " + randPlayer.name + " to serve first")
 
 	case "GetScore":
 		// TODO: return sets score
