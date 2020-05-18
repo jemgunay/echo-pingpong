@@ -10,6 +10,7 @@ import (
 )
 
 type (
+	// Game contain state for a ping pong game which can consist of multiple sets.
 	Game struct {
 		handler       routerHandler
 		playersByName map[string]*player
@@ -51,6 +52,8 @@ var (
 	mu        sync.RWMutex
 )
 
+// Get attempts to fetch Game instances for pre-established Alexa session keys. If a corresponding game is not found, a
+// new Game is created and added to the internal store.
 func Get(sessionKey string) (*Game, bool) {
 	mu.RLock()
 	g, ok := gameStore[sessionKey]
@@ -71,8 +74,10 @@ func Get(sessionKey string) (*Game, bool) {
 	return g, true
 }
 
+// Remove removes the game from the store that matches the given session key.
 func Remove(sessionKey string) {
 	mu.Lock()
+	// TODO: clean up internals?
 	delete(gameStore, sessionKey)
 	mu.Unlock()
 }
