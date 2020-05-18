@@ -3,9 +3,11 @@ package main
 import (
 	"flag"
 	"log"
+	"math/rand"
 	"net/http"
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/jemgunay/echo-pingpong/game"
 
@@ -18,7 +20,7 @@ func main() {
 	if err != nil || port == 0 {
 		port = 8080
 	}
-	skillID := flag.String("skill_id", "***REMOVED***", "the ping pong alexa skill ID")
+	skillID := flag.String("skill_id", "***REMOVED***", "the ping pong counter alexa skill ID")
 
 	flag.Parse()
 
@@ -26,15 +28,14 @@ func main() {
 		log.Fatal("skill_id not set")
 	}
 
-	log.Printf("starting HTTP server on port %d", port)
-	start(port, *skillID)
-}
+	// seed random num generator
+	rand.Seed(time.Now().UTC().UnixNano())
 
-func start(port int, skillID string) {
-	// define handler routing
+	// define handler routing and start server
+	log.Printf("starting HTTP server on port %d", port)
 	echoApps := map[string]interface{}{
 		"/echo/pingpong": alexa.EchoApplication{
-			AppID:   skillID,
+			AppID:   *skillID,
 			Handler: echoIntentHandler,
 		},
 	}
