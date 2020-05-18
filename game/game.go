@@ -10,6 +10,14 @@ import (
 )
 
 type (
+	Game struct {
+		handler       routerHandler
+		playersByName map[string]*player
+		playersByID   []*player
+		currentSet    *set
+		mu            sync.Mutex
+	}
+
 	player struct {
 		name    string
 		id      int
@@ -17,21 +25,21 @@ type (
 		setsWon int
 	}
 
-	Game struct {
-		Handle        routerHandler
-		playersByName map[string]*player
-		playersByID   []*player
-		currentSet    *Set
-	}
-
-	Set struct {
+	set struct {
 		startingPlayer *player
 		servingPlayer  *player
 	}
 )
 
+func (g *Game) Handle(r *alexa.EchoRequest) Response {
+	g.mu.Lock()
+	resp := g.handler(r)
+	g.mu.Unlock()
+	return resp
+}
+
 func (g *Game) otherPlayer(p *player) *player {
-	if g.playersByID[0].id == p.id {
+	if p.id == g.playersByID[0].id {
 		return g.playersByID[1]
 	}
 	return g.playersByID[0]
@@ -55,7 +63,7 @@ func Get(sessionKey string) (*Game, bool) {
 		playersByName: make(map[string]*player, 2),
 		playersByID:   make([]*player, 0, 2),
 	}
-	g.Handle = g.setupHandler
+	g.handler = g.setupHandler
 
 	mu.Lock()
 	gameStore[sessionKey] = g
