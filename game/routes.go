@@ -2,6 +2,7 @@ package game
 
 import (
 	"errors"
+	"log"
 	"math/rand"
 	"strconv"
 	"strings"
@@ -33,7 +34,7 @@ func (g *Game) setupHandler(echoReq *alexa.EchoRequest) Response {
 		}
 
 		if _, ok := g.playersByName[name]; ok {
-			return NewResponse(name + "%s has already been added")
+			return NewResponse(name + " has already been added")
 		}
 
 		p := &player{
@@ -46,8 +47,24 @@ func (g *Game) setupHandler(echoReq *alexa.EchoRequest) Response {
 		return NewResponse(name + " added")
 
 	case "RemovePlayer":
-		// TODO
-		return NewResponse("Not implemented")
+		name, err := extractName(echoReq)
+		if err != nil {
+			return NewResponse(err.Error())
+		}
+
+		p, ok := g.playersByName[name]
+		if !ok {
+			return NewResponse(name + " wasn't found")
+		}
+
+		// remove player references from slice and map stores
+		if p.id == 0 {
+			g.playersByID[0] = g.playersByID[1]
+		}
+		g.playersByID = g.playersByID[0:]
+
+		delete(g.playersByName, name)
+		return NewResponse(name + " has been removed")
 
 	case "StartGame":
 		if len(g.playersByName) < 2 {
@@ -56,12 +73,12 @@ func (g *Game) setupHandler(echoReq *alexa.EchoRequest) Response {
 
 		// determine random player to serve first
 		randPlayer := g.playersByID[rand.Intn(len(g.playersByID))]
-		g.currentSet = &Set{
+		g.currentSet = &set{
 			startingPlayer: randPlayer,
 			servingPlayer:  randPlayer,
 		}
 
-		g.Handle = g.inGameHandler
+		g.handler = g.inGameHandler
 
 		return NewResponse(randPlayer.name + " to serve first")
 	}
@@ -91,15 +108,19 @@ func (g *Game) inGameHandler(echoReq *alexa.EchoRequest) Response {
 
 		// has a player won?
 		if scoringPlayer.score >= 11 && scoringPlayer.score-otherPlayer.score >= 2 {
-			// TODO: count sets
-			g.Handle = g.finishedSetHandler
+			// increment winner's set wins counter
+			scoringPlayer.setsWon++
+
+			g.handler = g.finishedSetHandler
 			return NewResponse(scoringPlayer.name + " won the set! Do you want to play another set?")
 		}
 
 		// swap serving player if total serves is even, or if both players have a score of 10 or above
 		totalScore := scoringPlayer.score + otherPlayer.score
 		if (scoringPlayer.score >= 10 && otherPlayer.score >= 10) || totalScore%2 == 0 {
-			g.currentSet.servingPlayer, otherPlayer = otherPlayer, g.currentSet.servingPlayer
+			log.Printf("swapping serving player from %s to %s", g.currentSet.servingPlayer.name, otherPlayer.name)
+			g.currentSet.servingPlayer = g.otherPlayer(g.currentSet.servingPlayer)
+			log.Printf("swapped serving player from %s to %s", g.currentSet.servingPlayer.name, otherPlayer.name)
 		}
 
 		// compose up response message
@@ -119,6 +140,7 @@ func (g *Game) inGameHandler(echoReq *alexa.EchoRequest) Response {
 		}
 
 		buf.WriteString(". " + g.currentSet.servingPlayer.name + " to serve")
+
 		return NewResponse(buf.String())
 
 	case "GetScore":
