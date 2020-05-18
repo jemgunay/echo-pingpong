@@ -1,4 +1,4 @@
-# Ping Pong Alexa Skill Server
+# Ping Pong Counter Alexa Skill Server
 
 ## Chatter
 
@@ -15,8 +15,8 @@
 * [C] {name 2} scored
 * [S] {name 2} wins. Play again with same players?
 
-## Other Features
+## TODO
 
-* Ability to set number of points per round
-* Ability to keep track of multiple games per session (wins/losses)
+* Match point dialog
+* What's the score?
 * Ability to set up tournaments with > 2 people
