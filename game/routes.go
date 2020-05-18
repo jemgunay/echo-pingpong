@@ -11,7 +11,7 @@ import (
 )
 
 type (
-	// Response represents a response message that cna be consumed by Alexa.
+	// Response represents a response message that can be consumed by Alexa.
 	Response struct {
 		Msg string
 		Err error
@@ -20,6 +20,7 @@ type (
 	routerHandler func(r *alexa.EchoRequest) Response
 )
 
+// NewResponse initialises a message Response without an error.
 func NewResponse(msg string) Response {
 	return Response{Msg: msg}
 }
@@ -27,6 +28,10 @@ func NewResponse(msg string) Response {
 func (g *Game) setupHandler(echoReq *alexa.EchoRequest) Response {
 	switch echoReq.GetIntentName() {
 	case "AddPlayer":
+		if len(g.playersByID) == 2 {
+			return NewResponse("two players have already been added")
+		}
+
 		// TODO: handle adding two players at once?
 		name, err := extractName(echoReq)
 		if err != nil {
