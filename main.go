@@ -20,7 +20,7 @@ func main() {
 	if err != nil || port == 0 {
 		port = 8080
 	}
-	skillID := flag.String("skill_id", "***REMOVED***", "the ping pong counter alexa skill ID")
+	skillID := flag.String("skill_id", "", "the ping pong counter alexa skill ID")
 
 	flag.Parse()
 
