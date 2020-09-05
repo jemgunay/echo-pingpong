@@ -1,10 +1,8 @@
 # Ping Pong Counter Alexa Skill Server
 
-An alexa skill for keeping track of ping pong game scores.
+An Amazon Alexa skill for keeping track of ping pong game scores.
 
-## Usage
-
-### Deployment
+## Deployment
 
 Deploy to Google cloud (will require account setup prior):
 ```bash
@@ -16,7 +14,7 @@ Stream logs:
 make attach_log
 ```
 
-### Example Chatter Sequence
+## Example Chatter Sequence
 
 * [C] Play a new ping pong game
 * [C] Add player {name 1}
