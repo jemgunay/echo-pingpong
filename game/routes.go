@@ -52,6 +52,10 @@ func (g *Game) setupHandler(echoReq *alexa.EchoRequest) Response {
 		return NewResponse(name + " added")
 
 	case "RemovePlayer":
+		if len(g.playersByName) == 0 {
+			return NewResponse("there are no players to remove")
+		}
+
 		name, err := extractName(echoReq)
 		if err != nil {
 			return NewResponse(err.Error())
@@ -184,9 +188,10 @@ func (g *Game) inGameHandler(echoReq *alexa.EchoRequest) Response {
 		// TODO
 	}
 
+	// empty response to ignore background noise interference
 	return Response{
-		Msg: "please can you repeat that again?",
-		Err: errors.New("got unexpected intent: " + echoReq.GetIntentName()),
+		//Msg: "please can you repeat that again?",
+		//Err: errors.New("got unexpected intent: " + echoReq.GetIntentName()),
 	}
 }
 

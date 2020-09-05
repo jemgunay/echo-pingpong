@@ -2,6 +2,7 @@ package game
 
 import (
 	"errors"
+	"log"
 	"strconv"
 	"strings"
 	"sync"
@@ -32,9 +33,11 @@ type (
 	}
 )
 
-func (g *Game) Handle(r *alexa.EchoRequest) Response {
+// Handle handles concurrency safe access to the game routing handler.
+func (g *Game) Handle(echoReq *alexa.EchoRequest) Response {
+	log.Printf("intent received: %s", echoReq.GetIntentName())
 	g.mu.Lock()
-	resp := g.handler(r)
+	resp := g.handler(echoReq)
 	g.mu.Unlock()
 	return resp
 }
